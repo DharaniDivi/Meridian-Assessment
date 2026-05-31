@@ -1,0 +1,112 @@
+<div class="grid grid-2" style="margin-bottom: 1rem;">
+  <section class="card">
+    <h2>Status</h2>
+    <p class="muted">{{ configStatus() }}</p>
+    <p><strong>Remaining time:</strong> {{ timeRemaining() }}</p>
+    <p class="muted">Clock starts on first authenticated API call. If time shows unavailable, note that moment and track 3 hours manually.</p>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.75rem;">
+      <button class="secondary" (click)="checkHealth()" [disabled]="loading()">Health (no clock)</button>
+      <button class="secondary" (click)="refreshTime()" [disabled]="loading()">Refresh time</button>
+      <button class="secondary" (click)="discover()" [disabled]="loading()">Discover endpoints</button>
+      <button class="secondary" (click)="discoverSubmissionTypes()" [disabled]="loading()">Discover submit types</button>
+    </div>
+    @if (validSubmissionTypes().length) {
+      <p class="muted">Valid submit types: {{ validSubmissionTypes().join(', ') }}</p>
+    }
+    @if (healthBody()) {
+      <pre style="margin-top:0.75rem; overflow:auto; font-size:0.85rem;">{{ healthBody() }}</pre>
+    }
+  </section>
+
+  <section class="card">
+    <h2>Submit answer</h2>
+    <label>Type</label>
+    <select [(ngModel)]="submitType">
+      <option value="content_hash">content_hash (Layer 1)</option>
+      <option value="decrypted_hash">decrypted_hash (Layer 2)</option>
+      <option value="algorithm_answer">algorithm_answer (Layer 3)</option>
+      <option value="analysis">analysis (Layer 4)</option>
+      <option value="repo">repo</option>
+      <option value="transcript">transcript</option>
+    </select>
+    <label style="margin-top:0.5rem; display:block;">Value</label>
+    <textarea [(ngModel)]="submitValue"></textarea>
+    <label style="margin-top:0.5rem; display:block;">Notes (optional)</label>
+    <textarea [(ngModel)]="submitNotes" style="min-height:60px;"></textarea>
+    <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+      <button class="primary" (click)="submitManual()" [disabled]="loading() || !submitValue">Submit</button>
+      <button class="secondary" (click)="submitLayer1Quick()" [disabled]="loading()">Quick submit L1</button>
+      <button class="secondary" (click)="submitLayer2Quick()" [disabled]="loading()">Quick submit L2</button>
+      <button class="secondary" (click)="submitLayer3Quick()" [disabled]="loading()">Quick submit L3</button>
+      <button class="secondary" (click)="submitLayer4Quick()" [disabled]="loading()">Quick submit L4</button>
+    </div>
+  </section>
+</div>
+
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Layer 1 — Fetch &amp; hash</h2>
+    <button class="primary" (click)="runLayer1()" [disabled]="loading()">Run Layer 1</button>
+    <button class="secondary" (click)="rehashLayer1()" [disabled]="loading()">Rehash cached dataset</button>
+    @if (layer1(); as r) {
+      <pre style="margin-top:0.75rem;">{{ r | json }}</pre>
+      @if (r.hashes) {
+        <div style="margin-top:0.75rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+          @for (entry of layer1HashEntries(r.hashes); track entry.name) {
+            <button class="secondary" (click)="useLayer1Hash(entry.name, entry.hash)">
+              Use {{ entry.name }}
+            </button>
+          }
+        </div>
+      }
+    }
+  </section>
+
+  <section class="card">
+    <h2>Layer 2 — Decrypt</h2>
+    <button class="primary" (click)="runLayer2()" [disabled]="loading()">Run Layer 2</button>
+    @if (layer2(); as r) {
+      <pre style="margin-top:0.75rem;">{{ r | json }}</pre>
+    }
+  </section>
+
+  <section class="card">
+    <h2>Layer 3 — Hidden answer</h2>
+    <div style="display:flex; gap:0.5rem;">
+      <button class="primary" (click)="runLayer3()" [disabled]="loading()">Run Layer 3</button>
+      <button class="secondary" (click)="loadCandidates()" [disabled]="loading()">List candidates</button>
+    </div>
+    @if (layer3(); as r) {
+      <pre style="margin-top:0.75rem;">{{ r | json }}</pre>
+    }
+    @if (candidates().length) {
+      <p class="muted">Candidates: {{ candidates().join(', ') }}</p>
+    }
+  </section>
+
+  <section class="card">
+    <h2>Layer 4 — Analysis</h2>
+    <button class="primary" (click)="runLayer4()" [disabled]="loading()">Run Layer 4</button>
+    @if (layer4(); as r) {
+      <pre style="margin-top:0.75rem; white-space:pre-wrap;">{{ r.analysis || '' }}</pre>
+      @if (!r.analysis) {
+        <pre style="margin-top:0.75rem;">{{ r | json }}</pre>
+      }
+    }
+  </section>
+</div>
+
+<section class="card" style="margin-top: 1rem;">
+  <h2>Activity log</h2>
+  @if (!logs().length) {
+    <p class="muted">No activity yet.</p>
+  } @else {
+    <ul style="list-style:none; padding:0; margin:0;">
+      @for (entry of logs(); track entry.time + entry.message) {
+        <li [class]="entry.level" style="padding:0.25rem 0; border-bottom:1px solid #334155;">
+          <span class="muted">{{ entry.time }}</span> — {{ entry.message }}
+        </li>
+      }
+    </ul>
+  }
+</section>

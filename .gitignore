@@ -1,0 +1,41 @@
+# Secrets & credentials — never commit API keys or local config with real values
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+**/secrets.json
+**/*.secrets.json
+.env
+.env.*
+!.env.example
+credentials.json
+*.pem
+*.key
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DotSettings.user
+
+# Angular
+node_modules/
+dist/
+.angular/
+*.log
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Assessment data cache
+data/
+*.encrypted
+*.decrypted
